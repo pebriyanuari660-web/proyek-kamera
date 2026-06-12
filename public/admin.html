@@ -1,0 +1,39 @@
+,<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Admin</title>
+    <script src="https://js.pusher.com/8.0/pusher.min.js"></script>
+    <style>
+        body { font-family: Arial; background: #111; color: white; padding: 20px; }
+        .grid { display: flex; flex-wrap: wrap; gap: 15px; }
+        .card { background: #222; padding: 10px; border-radius: 8px; border: 1px solid #333; }
+        .card img { width: 300px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Real-time Camera Log</h1>
+    <div class="grid" id="log-foto"></div>
+
+    <script>
+        // Ganti 'APP_KEY' dan 'CLUSTER' dengan milik Anda dari Dashboard Pusher
+        const pusher = new Pusher('MASUKKAN_PUSHER_KEY_ANDA_DISINI', {
+            cluster: 'MASUKKAN_PUSHER_CLUSTER_ANDA',
+            forceTLS: true
+        });
+
+        const channel = pusher.subscribe('kamera-channel');
+        
+        channel.bind('gambar-baru', function(data) {
+            const logFoto = document.getElementById('log-foto');
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <img src="${data.image}" alt="Tangkapan">
+                <p>Waktu: ${data.waktu}</p>
+            `;
+            logFoto.prepend(card);
+        });
+    </script>
+</body>
+</html>
