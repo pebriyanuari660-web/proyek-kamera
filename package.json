@@ -1,0 +1,11 @@
+{
+  "name": "proyek-kamera-vercel",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node api/kirim-gambar.js"
+  },
+  "dependencies": {
+    "pusher": "^5.1.3"
+  }
+}
+
